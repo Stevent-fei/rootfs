@@ -136,22 +136,24 @@ regArgs="-d --restart=always \
 -v $certs_dir:/certs \
 -v $VOLUME:/var/lib/registry \
 -e REGISTRY_HTTP_TLS_CERTIFICATE=/certs/$REGISTRY_DOMAIN.crt \
--e REGISTRY_HTTP_TLS_KEY=/certs/$REGISTRY_DOMAIN.key"
+-e REGISTRY_HTTP_TLS_KEY=/certs/$REGISTRY_DOMAIN.key \
+-e REGISTRY_HTTP_DEBUG_ADDR=0.0.0.0:5001 \
+-e REGISTRY_HTTP_DEBUG_PROMETHEUS_ENABLED=true"
 
-if [ -f "$config" ]; then
+if [ -f $config ]; then
   sed -i "s/5000/$1/g" "$config"
   regArgs="$regArgs \
     -v $config:/etc/docker/registry/config.yml"
 fi
 
 if [ -f "$htpasswd" ]; then
-  runtimeRun "$regArgs" \
+  runtimeRun $regArgs \
     -v "$htpasswd":/htpasswd \
     -e REGISTRY_AUTH=htpasswd \
     -e REGISTRY_AUTH_HTPASSWD_PATH=/htpasswd \
     -e REGISTRY_AUTH_HTPASSWD_REALM="Registry Realm" registry:2.7.1 || startRegistry
 else
-  runtimeRun "$regArgs" registry:2.7.1 || startRegistry
+  runtimeRun $regArgs registry:2.7.1 || startRegistry
 fi
 
 if ! check_registry; then
